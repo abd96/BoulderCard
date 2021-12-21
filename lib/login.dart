@@ -73,8 +73,7 @@ class LoginScreen extends StatelessWidget {
       ],
       onSubmitAnimationCompleted: () {
         Navigator.of(context).pushReplacement(MaterialPageRoute(
-          builder: (context) =>
-              DefaultTabController(length: 2, child: HomePage()),
+          builder: (context) => HomePage(),
         ));
       },
       onRecoverPassword: _recoverPassword,

@@ -8,9 +8,12 @@ import 'package:parse_server_sdk_flutter/parse_server_sdk.dart';
 
 // utils
 import 'database.dart';
+import 'main.dart';
 
 class HallsList extends StatefulWidget {
-  HallsList({Key? key}) : super(key: key);
+  final VoidCallback refresh;
+
+  HallsList(this.refresh);
   @override
   HallListState createState() => HallListState();
 }
@@ -26,9 +29,9 @@ class HallListState extends State<HallsList> {
 
   @override
   Widget build(BuildContext context) {
-    Future.delayed(Duration(seconds: 2), () {
-      update();
-    });
+    //Future.delayed(Duration(seconds: 2), () {
+    //  update();
+    //});
     return Stack(
       children: <Widget>[
         ListView.builder(
@@ -38,18 +41,42 @@ class HallListState extends State<HallsList> {
             }),
         Align(
           alignment: Alignment.bottomRight,
-          child: FloatingActionButton(
-            onPressed: () async => {
-              // After await the update and cardAdder is closed the update method will get called
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => CardAdder()),
-              ),
-              update(),
-            },
-            tooltip: 'add a new Hall',
-            child: Icon(Icons.add),
-          ),
+          child: ButtonBar(children: <Widget>[
+            FloatingActionButton(
+              onPressed: () async => {
+                for (var i = 0; i < cards.length; i++)
+                  {
+                    print(cards[i]),
+                  }
+                // After await the update and cardAdder is closed the update method will get called
+                //await Navigator.push(
+                //  context,
+                //  MaterialPageRoute(builder: (context) => CardAdder()),
+                //),
+                //update(),
+              },
+              tooltip: 'Delete Hall/Halls',
+              child: Icon(Icons.delete),
+              backgroundColor: Colors.red,
+            ),
+            FloatingActionButton(
+              onPressed: () async => {
+                showDialog(
+                    context: context,
+                    builder: (context) => CardAdder(
+                          () => update(),
+                        )),
+                // After await the update and cardAdder is closed the update method will get called
+                //await Navigator.push(
+                //  context,
+                //  MaterialPageRoute(builder: (context) => CardAdder()),
+                //),
+                //update(),
+              },
+              tooltip: 'add a new Hall',
+              child: Icon(Icons.add),
+            ),
+          ]),
         ),
       ],
     );
@@ -64,22 +91,37 @@ class HallListState extends State<HallsList> {
   }
 
   void update() async {
+    print("UPDATE");
     List<Widget> newCards = await getCards();
     setState(() {
       cards = newCards;
     });
+    print("UPDATED");
   }
 }
 
-class HallCard extends StatelessWidget {
-  String? objectId = '';
+class HallCard extends StatefulWidget {
+  String? objectId;
   String name;
   String location;
   String barcode;
-  HallCard(this.name, this.location, this.barcode);
-
-  void set id(String? generatedId) {
+  HallCard(
+    this.name,
+    this.location,
+    this.barcode,
+  );
+  set id(String? generatedId) {
     objectId = generatedId;
+  }
+
+  @override
+  HallCardState createState() => HallCardState();
+}
+
+class HallCardState extends State<HallCard> {
+  @override
+  void initState() {
+    super.initState();
   }
 
   @override
@@ -93,8 +135,8 @@ class HallCard extends StatelessWidget {
           children: <Widget>[
             ListTile(
               leading: Icon(Icons.place),
-              title: Text(name),
-              subtitle: Text(location),
+              title: Text(widget.name),
+              subtitle: Text(widget.location),
             ),
             ButtonBar(
               buttonPadding: EdgeInsets.symmetric(horizontal: 11, vertical: 1),
@@ -112,7 +154,7 @@ class HallCard extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                             builder: (context) => HallProfile(
-                                this.name, this.location, this.barcode)));
+                                widget.name, widget.location, widget.barcode)));
                   },
                 ),
                 FlatButton(
@@ -121,12 +163,11 @@ class HallCard extends StatelessWidget {
                   onPressed: () async {
                     ParseUser currentUser = await ParseUser.currentUser();
                     String? cardObjectId = await getCardObjectId(
-                        name, location, currentUser.objectId!);
-                    if (objectId != null) {
+                        widget.name, widget.location, currentUser.objectId!);
+                    if (widget.objectId != null) {
                       var cardToDelete = ParseObject('HallCards')
                         ..objectId = cardObjectId;
                       await cardToDelete.delete();
-                      print("deleted?");
                     }
                   },
                 ),
@@ -143,6 +184,10 @@ class CardAdder extends StatelessWidget {
   final cityController = TextEditingController();
   final nameController = TextEditingController();
   final codeController = TextEditingController();
+  final VoidCallback onCardAdded;
+
+  CardAdder(this.onCardAdded);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -190,8 +235,9 @@ class CardAdder extends StatelessWidget {
             ),
             TextButton(
               child: Text('Add'),
-              onPressed: () async {
+              onPressed: () {
                 addCard();
+                onCardAdded();
                 Navigator.of(context).pop();
               },
             )

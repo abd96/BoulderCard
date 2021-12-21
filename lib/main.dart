@@ -23,29 +23,42 @@ class BoulderApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.green,
         ),
-        home: DefaultTabController(length: 2, child: LoginScreen()));
+        //home: DefaultTabController(length: 2, child: LoginScreen()));
+        home: LoginScreen());
   }
 }
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
+  HomePage({Key? key}) : super(key: key);
+  @override
+  HomePageState createState() => HomePageState();
+}
+
+class HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Boulder eCards"),
-      ),
-      bottomNavigationBar: menu(),
-      body: TabBarView(
-        children: [Container(child: HallsList()), Container(child: Settings())],
-      ),
-    );
+    return DefaultTabController(
+        length: 2,
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text("Boulder eCards"),
+          ),
+          bottomNavigationBar: menu(),
+          body: TabBarView(
+            children: [HallsList(() => refresh()), Settings()],
+          ),
+        ));
+  }
+
+  void refresh() async {
+    setState(() {});
   }
 }
 
 Widget menu() {
   return Container(
-    color: Color(0xFF4CAF50),
-    child: TabBar(
+    color: const Color(0xFF4CAF50),
+    child: const TabBar(
       labelColor: Colors.white,
       unselectedLabelColor: Colors.white70,
       indicatorSize: TabBarIndicatorSize.tab,
